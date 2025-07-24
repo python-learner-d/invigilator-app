@@ -1,0 +1,26 @@
+{% extends 'attendance/base.html' %}
+{% block title %}Upload Students{% endblock %}
+
+{% block style %}
+    .upload-form { max-width: 500px; margin: 40px auto; padding: 30px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { display: block; width: 100%; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; border: none; font-size: 1em; cursor: pointer; }
+    .note { font-size: 0.9em; color: #6c757d; margin-top: 15px; }
+{% endblock %}
+
+{% block content %}
+    <form action="{% url 'upload_students' %}" method="post" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        <h1>Upload Student List</h1>
+        <div class="form-group">
+            <label for="excel_file">Select Excel File (.xlsx)</label>
+            <input type="file" name="excel_file" id="excel_file" accept=".xlsx" required>
+        </div>
+        <button type="submit" class="btn">Upload</button>
+        <p class="note">
+            Please ensure your Excel file has columns named exactly "<b>StudentID</b>" and "<b>Batch</b>". The seating will be arranged based on the order of students in this file.
+        </p>
+    </form>
+{% endblock %}

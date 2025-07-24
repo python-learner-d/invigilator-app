@@ -1,0 +1,33 @@
+{% extends 'attendance/base.html' %}
+{% block title %}Upload Seating Plan{% endblock %}
+
+{% block style %}
+    .upload-form { max-width: 500px; margin: 40px auto; padding: 30px; background-color: #fff; border: 1px solid #ddd; border-radius: 8px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input[type="file"] { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { display: block; width: 100%; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; border: none; font-size: 1em; cursor: pointer; }
+    .note { font-size: 0.9em; color: #6c757d; margin-top: 15px; }
+    .note ul { padding-left: 20px; }
+{% endblock %}
+
+{% block content %}
+    <form action="{% url 'upload_plan' %}" method="post" enctype="multipart/form-data" class="upload-form">
+        {% csrf_token %}
+        <h1>Upload Seating Plan</h1>
+        <div class="form-group">
+            <label for="excel_file">Select Excel File (.xlsx)</label>
+            <input type="file" name="excel_file" id="excel_file" accept=".xlsx" required>
+        </div>
+        <button type="submit" class="btn">Upload</button>
+        <div class="note">
+            <p>Please ensure your Excel file follows this structure:</p>
+            <ul>
+                <li>Each sheet must be named exactly like a room created in the admin panel (e.g., "Room 101").</li>
+                <li>The sheet should contain a grid of student IDs, with no headers.</li>
+                <li>The number of columns in the sheet should be (Room Columns * Students per Bench).</li>
+                <li>The number of rows in the sheet should match the "Benches per column" for that room.</li>
+            </ul>
+        </div>
+    </form>
+{% endblock %}

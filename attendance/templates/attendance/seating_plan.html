@@ -1,0 +1,250 @@
+{% extends 'attendance/base.html' %}
+
+{% block title %}Seating Plan: {{ room.name }}{% endblock %}
+
+{% block style %}
+    .grid-container { 
+        display: grid; 
+        grid-template-columns: repeat({{ room.columns }}, 1fr); 
+        gap: 15px; 
+        margin-bottom: 30px;
+    }
+    .column-header { 
+        text-align: center; 
+        font-weight: bold; 
+        margin-bottom: 10px; 
+        color: #555; 
+    }
+    .column { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 15px; 
+    }
+    .bench { 
+        background-color: #fff; 
+        border: 1px solid #ccc; 
+        border-radius: 8px; 
+        padding: 5px; 
+        min-height: 70px; 
+        display: flex; 
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center; 
+        position: relative;
+    }
+    .row-label {
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        background-color: #6c757d;
+        color: white;
+        font-size: 0.7em;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+    .student, .empty-seat {
+        flex-grow: 1;
+        padding: 5px; 
+        margin: 2px; 
+        border-radius: 4px; 
+        font-size: 0.9em;
+        text-align: center;
+        min-width: 80px;
+        min-height: 50px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .student { 
+        cursor: pointer; 
+        background-color: #e9ecef; 
+        border: 1px solid #ced4da; 
+        transition: background-color 0.2s; 
+    }
+    .empty-seat {
+        background-color: #f8f9fa;
+        border: 1px dashed #ddd;
+    }
+    .student-batch { font-size: 0.7em; color: #6c757d; }
+    .student.marked-absent { 
+        background-color: #dc3545; 
+        color: white; 
+        border-color: #c82333; 
+    }
+    .save-container {
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-top: 2px solid #e9ecef;
+        text-align: center;
+    }
+    #absentee-summary {
+        margin-bottom: 15px;
+    }
+    #absentee-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        list-style: none;
+        padding: 0;
+    }
+    #absentee-list li {
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+    #save-btn {
+        padding: 12px 30px;
+        font-size: 1.1em;
+        font-weight: bold;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    #save-btn:disabled {
+        background-color: #6c757d;
+        cursor: not-allowed;
+    }
+    .message { 
+        text-align: center; 
+        padding: 10px; 
+        margin-bottom: 20px; 
+        border-radius: 5px; 
+        color: white; 
+        display: none; 
+    }
+    .message.success { background-color: #28a745; }
+    .message.error { background-color: #dc3545; }
+
+    @media (max-width: 768px) {
+        .grid-container {
+            grid-template-columns: 1fr;
+            gap: 25px;
+        }
+        .student, .empty-seat {
+            min-width: 60px;
+            font-size: 0.8em;
+        }
+        h1 { font-size: 1.5em; }
+    }
+{% endblock %}
+
+{% block content %}
+    <h1>Seating Plan: {{ room.name }}</h1>
+    <div id="message-box" class="message"></div>
+
+    <div class="grid-container">
+        {% for column_benches in plan %}
+            <div class="column">
+                <div class="column-header">Column {{ forloop.counter }}</div>
+                {% for bench in column_benches %}
+                    <div class="bench">
+                        <span class="row-label">R{{ bench.row_num }}</span>
+                        {% for seat in bench.seats %}
+                            {% if seat %}
+                                <div class="student" data-id="{{ seat.student_id }}" onclick="toggleAbsence(this)">
+                                    {{ seat.student_id }}
+                                    <div class="student-batch">({{ seat.batch }})</div>
+                                </div>
+                            {% else %}
+                                <div class="empty-seat"></div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="save-container">
+        <div id="absentee-summary">
+            <h3>Marked Absentees:</h3>
+            <ul id="absentee-list">
+                <!-- Absentees will be listed here by JavaScript -->
+            </ul>
+        </div>
+        <button id="save-btn" onclick="saveAbsentees()">Save Absentees</button>
+    </div>
+
+<script>
+    const absentStudents = new Set();
+    const roomId = '{{ room.id }}';
+
+    function toggleAbsence(element) {
+        const studentId = element.getAttribute('data-id');
+        const isMarked = element.classList.toggle('marked-absent');
+
+        if (isMarked) {
+            absentStudents.add(studentId);
+        } else {
+            absentStudents.delete(studentId);
+        }
+        updateAbsenteeDisplay();
+    }
+
+    function updateAbsenteeDisplay() {
+        const listElement = document.getElementById('absentee-list');
+        listElement.innerHTML = ''; // Clear the current list
+
+        if (absentStudents.size === 0) {
+            const li = document.createElement('li');
+            li.textContent = 'None';
+            li.style.backgroundColor = '#6c757d';
+            listElement.appendChild(li);
+        } else {
+            absentStudents.forEach(studentId => {
+                const li = document.createElement('li');
+                li.textContent = studentId;
+                listElement.appendChild(li);
+            });
+        }
+    }
+
+    function saveAbsentees() {
+        const saveBtn = document.getElementById('save-btn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Saving...';
+
+        const absent_ids = Array.from(absentStudents);
+
+        fetch("{% url 'save_absentees' %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+            body: JSON.stringify({ room_id: roomId, absent_ids: absent_ids })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showMessage(data.message, 'success');
+                saveBtn.textContent = 'Saved!';
+            } else {
+                showMessage(data.message, 'error');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Save Absentees';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('An error occurred during save.', 'error');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Save Absentees';
+        });
+    }
+
+    function showMessage(text, type) {
+        const messageBox = document.getElementById('message-box');
+        messageBox.textContent = text;
+        messageBox.className = 'message ' + type;
+        messageBox.style.display = 'block';
+        window.scrollTo(0, 0); // Scroll to top to make sure message is seen
+        setTimeout(() => { messageBox.style.display = 'none'; }, 4000);
+    }
+
+    // Initial display update on page load
+    document.addEventListener('DOMContentLoaded', updateAbsenteeDisplay);
+</script>
+{% endblock %}
