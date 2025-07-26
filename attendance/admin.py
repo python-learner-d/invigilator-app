@@ -1,3 +1,4 @@
+# attendance/admin.py
 from django.contrib import admin
 from .models import Room, Student, Bench, Absentee, SeatingAssignment, InvigilatorAssignment
 
@@ -13,4 +14,5 @@ admin.site.register(Student)
 admin.site.register(Bench)
 admin.site.register(Absentee)
 admin.site.register(SeatingAssignment)
-admin.site.register(InvigilatorAssignment)
+# The separate registration below is not needed as it's handled by the inline
+# admin.site.register(InvigilatorAssignment)
