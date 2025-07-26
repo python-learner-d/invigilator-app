@@ -14,23 +14,15 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
+
+
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views # Import auth views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    
-    # Explicitly define the login view to ensure the template is found
-    path(
-        'accounts/login/',
-        auth_views.LoginView.as_view(template_name='registration/login.html'),
-        name='login'
-    ),
-    
-    # Include the rest of the auth URLs (like logout)
-    path('accounts/', include('django.contrib.auth.urls')),
-    
+    # We only need the logout view now, as login is handled by our landing page
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('', include('attendance.urls')),
 ]
