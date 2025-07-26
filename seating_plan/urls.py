@@ -22,7 +22,10 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # We only need the logout view now, as login is handled by our landing page
+    
+    # Use the built-in logout view directly
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    
+    # Let our app's URLs handle the login via the landing page
     path('', include('attendance.urls')),
 ]
